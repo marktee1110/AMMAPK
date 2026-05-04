@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ar" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>AMMAR SURVEY - لوحة التحكم</title>
+  <style>
+    :root {
+      --primary: #0ea5e9;
+      --secondary: #6366f1;
+      --accent: #f59e0b;
+      --archive: #8b5cf6; 
+      --danger: #ef4444;
+      --bg: #f8fafc;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: #1e293b;
+      direction: ltr;
+      text-align: left;
+    }
+    header {
+      background: linear-gradient(135deg, #1e293b, #334155);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+      border-bottom: 5px solid var(--accent);
+    }
+    header h1 { margin: 0; font-size: 32px; font-weight: 900; }
+    header p { margin: 10px 0 0; opacity: 0.8; font-weight: bold; }
+
+    .container {
+      max-width: 600px;
+      margin: -30px auto 40px;
+      padding: 0 15px;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    .menu-item {
+      background: white;
+      text-decoration: none;
+      color: #000;
+      padding: 18px;
+      border-radius: 15px;
+      border: 3px solid #000;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: 0.2s;
+      box-shadow: 0 4px 0 #000;
+    }
+    .menu-item:active { transform: translateY(4px); box-shadow: none; }
+    .icon {
+      font-size: 30px;
+      width: 50px; height: 50px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px; background: #f1f5f9;
+    }
+    .text h2 { margin: 0; font-size: 18px; font-weight: 900; }
+    .text p { margin: 5px 0 0; font-size: 13px; color: #64748b; font-weight: bold; }
+
+    .p1 { border-color: var(--primary); }
+    .p2 { border-color: var(--secondary); }
+    .p3 { border-color: #10b981; }
+    .p4_search { border-color: var(--accent); }
+    .p4_session { border-color: var(--archive); } 
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>AMMAR SURVEY V2.0</h1>
+  <p>المساعد الذكي للمهندس المساح</p>
+</header>
+
+<div class="container">
+  <div class="menu-grid">
+    
+    <a href="p1_survey.html" class="menu-item p1">
+      <div class="icon">📐</div>
+      <div class="text"><h2>P1 - الرفع الميداني</h2><p>حساب إحداثيات النقاط المرصودة</p></div>
+    </a>
+
+    <a href="p2_stakeout.html" class="menu-item p2">
+      <div class="icon">🎯</div>
+      <div class="text"><h2>P2 - التوقيع المساحي</h2><p>حساب HD & HR للتوقيع</p></div>
+    </a>
+
+    <a href="p4_smart_search.html" class="menu-item p4_search">
+      <div class="icon">🔍</div>
+      <div class="text"><h2>P4 - محرك البحث الذكي</h2><p>بحث متطور في قاعدة البيانات</p></div>
+    </a>
+
+    <a href="p4_session_manager.html" class="menu-item p4_session">
+      <div class="icon">📂</div>
+      <div class="text"><h2>P4 - مدير الجلسات</h2><p>إدارة الجلسات المؤرشفة وتصديرها</p></div>
+    </a>
+
+    <a href="p3_db_manager.html" class="menu-item p3">
+      <div class="icon">🗄️</div>
+      <div class="text"><h2>P3 - مدير قاعدة البيانات</h2><p>إدارة نقاط الثوابت والـ Excel</p></div>
+    </a>
+
+  </div>
+</div>
+
+<div style="text-align: center; padding: 20px; font-weight: 900; font-size: 12px; color: #94a3b8;">
+  Developed by Eng. Ammar Yousef &copy; 2026
+</div>
+
+</body>
+</html>

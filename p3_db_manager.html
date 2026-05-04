@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ar" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>🗄️ P3 مدير البيانات المطور — م. عمار يوسف</title>
+  
+  <!-- استدعاء مكتبة الإكسل محلياً للعمل بدون إنترنت -->
+  <script src="xlsx.full.min.js"></script>
+
+  <style>
+    :root{--main:#10b981;--danger:#ef4444;--ok:#0ea5e9;--bg:#ffffff}
+    body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:#000;direction:ltr; text-align: left;}
+    
+    /* تنسيق أزرار التنقل الموحد */
+    nav {
+      background: #1e293b; 
+      padding: 20px 10px; 
+      text-align: center; 
+      display: flex; 
+      justify-content: center; 
+      gap: 12px; 
+      flex-wrap: wrap;
+      margin-top: 10px; 
+      border-bottom: 3px solid #000;
+    }
+    nav a {
+      color: #fff; 
+      text-decoration: none; 
+      font-size: 16px; 
+      font-weight: 900; 
+      background: rgba(255,255,255,0.15); 
+      padding: 10px 20px; 
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    header{background:var(--main);color:white;padding:15px;text-align:center;}
+    header h1 { margin:0; font-size:22px; font-weight:900; }
+    
+    .container{max-width:100%; margin:10px auto; padding:0 8px; box-sizing: border-box;}
+    .card{background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);margin-bottom:12px;border:2px solid #000}
+    
+    .input{padding:12px; border:3px solid #000; border-radius:8px; width:100%; font-size:18px; font-weight:900; box-sizing:border-box; margin-bottom:5px; background: #fff !important; color: #000 !important;}
+    .btn{padding:12px; border:none; border-radius:8px; cursor:pointer; font-size:18px; font-weight:900; width:100%; margin-top:5px;}
+    
+    .file-label{display:block; background:#f3f4f6; border:2px dashed #000; padding:20px; text-align:center; border-radius:10px; cursor:pointer; font-weight:900; margin-bottom:10px;}
+    
+    .table-container { overflow-x: auto; max-height: 500px; border: 2px solid #000; border-radius: 8px; margin-top:10px; }
+    table{width:100%; border-collapse:collapse; min-width: 700px;}
+    th,td{border:1px solid #000; padding:12px 5px; text-align:center; font-weight:900; font-size: 16px; color: #000;}
+    th{background:#eee; position: sticky; top: 0; font-size:12px; z-index: 10;}
+    .row-manual { background-color: #f0fdf4; }
+  </style>
+</head>
+<body>
+
+<nav>
+    <a href="index.html">🏠 الرئيسية</a>
+    <a href="p1_survey.html">📐 الرفع</a>
+    <a href="p2_stakeout.html">🎯 التوقيع</a>
+</nav>
+
+<header>
+    <h1>🗄️ مدير قاعدة البيانات المطور</h1>
+    <p>م. عمار يوسف</p>
+</header>
+
+<div class="container">
+  <!-- قسم الاستيراد والتصدير -->
+  <div class="card">
+    <h3 style="margin-top:0;">📂 إدارة ملفات الإكسل (Excel)</h3>
+    <label class="file-label" for="excelFile">اضغط هنا لاختيار ملف إكسل من الهاتف</label>
+    <input type="file" id="excelFile" accept=".xlsx, .xls" style="display:none">
+    
+    <div style="display:flex; gap:8px;">
+        <button class="btn" style="background:#000; color:#fff; flex:1;" onclick="importToDB()">💾 حفظ في الذاكرة</button>
+        <button class="btn" style="background:#4b5563; color:#fff; flex:1;" onclick="exportToExcel()">📤 تصدير إكسل</button>
+    </div>
+  </div>
+
+  <!-- قسم الإضافة اليدوية -->
+  <div class="card" style="border-color: var(--ok);">
+    <h3 style="margin-top:0; color:var(--ok);">➕ إضافة نقطة ثوابت يدوياً</h3>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+        <input id="manName" class="input" placeholder="اسم النقطة">
+        <input id="manArea" class="input" placeholder="المنطقة">
+        <input id="manX" class="input" type="number" step="any" inputmode="decimal" placeholder="X">
+        <input id="manY" class="input" type="number" step="any" inputmode="decimal" placeholder="Y">
+    </div>
+    <input id="manDesc" class="input" placeholder="الوصف أو ملاحظات">
+    <button class="btn" style="background:var(--ok); color:#fff" onclick="addManualPoint()">✨ إضافة وترتيب أبجدي</button>
+  </div>
+
+  <!-- عرض قاعدة البيانات -->
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div style="font-weight:900;">إجمالي النقاط: <span id="count" style="color:var(--ok); font-size:22px;">0</span></div>
+        <button class="btn danger" style="width:auto; padding:8px 20px;" onclick="clearDB()">🗑️ مسح الكل</button>
+    </div>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>الاسم</th>
+                    <th>المنطقة</th>
+                    <th>X</th>
+                    <th>Y</th>
+                    <th>الوصف</th>
+                    <th>⚙️</th>
+                </tr>
+            </thead>
+            <tbody id="dbBody"></tbody>
+        </table>
+    </div>
+  </div>
+</div>
+
+<script>
+    let tempFilePoints = [];
+
+    // 1. معالجة ملف الإكسل المرفوع
+    document.getElementById('excelFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
+            
+            tempFilePoints = [];
+            rows.forEach((row, index) => {
+                // افتراض الترتيب: [0:ID, 1:Name, 2:Area, 3:X, 4:Y, 5:Desc]
+                const name = row[1];
+                const area = row[2] || "-";
+                const x = parseFloat(row[3]);
+                const y = parseFloat(row[4]);
+                const desc = row[5] || "-";
+                
+                if (name && !isNaN(x) && !isNaN(y)) {
+                    tempFilePoints.push({
+                        name: String(name),
+                        area: String(area),
+                        x: x, y: y,
+                        desc: String(desc),
+                        type: 'file'
+                    });
+                }
+            });
+            alert(`✅ تم قراءة ${tempFilePoints.length} نقطة بنجاح.`);
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    // 2. الحفظ في LocalStorage
+    function importToDB() {
+        if(tempFilePoints.length === 0) return alert("❌ يرجى اختيار ملف أولاً");
+        let db = JSON.parse(localStorage.getItem("pointsDB") || "[]");
+        db = mergeAndSort(db, tempFilePoints);
+        localStorage.setItem("pointsDB", JSON.stringify(db));
+        tempFilePoints = [];
+        renderDB();
+        alert("✅ تم الاستيراد وتحديث القاعدة بنجاح");
+    }
+
+    // 3. التصدير لإكسل متوافق مع أندرويد
+    function exportToExcel() {
+        const db = JSON.parse(localStorage.getItem("pointsDB") || "[]");
+        if(db.length === 0) return alert("❌ القاعدة فارغة");
+
+        const excelData = db.map((p, i) => [i + 1, p.name, p.area, p.x, p.y, p.desc]);
+        excelData.unshift(["ID", "Name", "Area", "X", "Y", "Description"]);
+
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "PointsDB");
+        
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(wb, `Ammar_DB_${dateStr}.xlsx`);
+    }
+
+    // 4. إضافة نقطة يدوية
+    function addManualPoint() {
+        const name = document.getElementById("manName").value.trim();
+        const x = parseFloat(document.getElementById("manX").value);
+        const y = parseFloat(document.getElementById("manY").value);
+        const area = document.getElementById("manArea").value.trim() || "-";
+        const desc = document.getElementById("manDesc").value.trim() || "-";
+
+        if (!name || isNaN(x) || isNaN(y)) return alert("❌ يرجى ملء الاسم والإحداثيات");
+
+        let db = JSON.parse(localStorage.getItem("pointsDB") || "[]");
+        db = mergeAndSort(db, [{ name, area, x, y, desc, type: 'manual' }]);
+        
+        localStorage.setItem("pointsDB", JSON.stringify(db));
+        
+        // تنظيف الحقول
+        ["manName", "manArea", "manX", "manY", "manDesc"].forEach(id => document.getElementById(id).value = "");
+        
+        renderDB();
+        alert(`✅ تم إضافة النقطة: ${name}`);
+    }
+
+    // 5. دالة الدمج والترتيب الأبجدي
+    function mergeAndSort(existing, newPts) {
+        const combined = [...existing, ...newPts];
+        // إزالة التكرار بناءً على الاسم
+        const unique = Array.from(new Set(combined.map(a => String(a.name).toLowerCase())))
+                            .map(name => combined.find(a => String(a.name).toLowerCase() === name));
+        
+        // ترتيب أبجدي يدعم العربية والأرقام
+        return unique.sort((a, b) => 
+            String(a.name).localeCompare(String(b.name), 'ar', { sensitivity: 'base', numeric: true })
+        );
+    }
+
+    // 6. عرض البيانات
+    function renderDB() {
+        const db = JSON.parse(localStorage.getItem("pointsDB") || "[]");
+        document.getElementById("count").innerText = db.length;
+        document.getElementById("dbBody").innerHTML = db.map((p, i) => `
+            <tr class="${p.type === 'manual' ? 'row-manual' : ''}">
+                <td>${p.name}</td>
+                <td>${p.area}</td>
+                <td style="color:blue">${p.x.toFixed(3)}</td>
+                <td style="color:blue">${p.y.toFixed(3)}</td>
+                <td style="font-size:12px; color:#555;">${p.desc}</td>
+                <td><button onclick="deletePoint(${i})" style="border:none; background:none; font-size:22px; cursor:pointer;">🗑️</button></td>
+            </tr>
+        `).join("");
+    }
+
+    function deletePoint(i) {
+        if(confirm("هل تريد حذف هذه النقطة؟")) {
+            let db = JSON.parse(localStorage.getItem("pointsDB") || "[]");
+            db.splice(i, 1);
+            localStorage.setItem("pointsDB", JSON.stringify(db));
+            renderDB();
+        }
+    }
+
+    function clearDB() {
+        if(confirm("⚠️ سيتم حذف جميع النقاط نهائياً. هل أنت متأكد؟")) {
+            localStorage.removeItem("pointsDB");
+            renderDB();
+        }
+    }
+
+    window.onload = renderDB;
+</script>
+</body>
+</html>

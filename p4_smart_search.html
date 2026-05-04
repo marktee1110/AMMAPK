@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ar" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>🔍 P4 البحث الذكي المطور - م. عمار يوسف</title>
+  <style>
+    :root{--main:#f59e0b;--dark:#1e293b;--bg:#f8fafc;--blue:#2563eb}
+    body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:#000;direction:ltr; text-align: left;}
+    
+    /* أزرار التنقل */
+    nav { background: var(--dark); padding: 20px 10px; text-align: center; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; border-bottom: 3px solid #000; }
+    nav a { color: #fff; text-decoration: none; font-size: 16px; font-weight: 900; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); }
+
+    header{background:var(--main);color:#fff;padding:20px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+    header h1{margin:0;font-size:24px;font-weight:900}
+    
+    .container{padding:12px; max-width:800px; margin:0 auto;}
+    
+    /* كارت البحث */
+    .search-card{background:#fff; padding:20px; border-radius:15px; border:3px solid #000; margin-bottom:15px; position:sticky; top:10px; z-index:100; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);}
+    .input{padding:15px; border:3px solid #000; border-radius:10px; width:100%; font-size:18px; font-weight:900; box-sizing:border-box; outline:none; margin-bottom:10px;}
+    .input:focus{border-color:var(--main); background:#fffbeb !important;}
+    
+    .stats{font-weight:900; font-size:14px; color:#666; display:flex; justify-content:space-between; align-items: center;}
+
+    /* قائمة المناطق كأزرار سريعة */
+    #areaFilters { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0 15px; scrollbar-width: none; }
+    #areaFilters::-webkit-scrollbar { display: none; }
+    .filter-btn { background: #e2e8f0; border: 2px solid #000; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 900; white-space: nowrap; cursor: pointer; }
+    .filter-btn.active { background: var(--main); color: #fff; }
+
+    /* عرض النتائج */
+    .results-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+    .point-card{background:#fff; border:3px solid #000; padding:15px; border-radius:12px; position: relative; transition: 0.2s;}
+    .point-card:active { transform: scale(0.97); }
+    .point-header{display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;}
+    .point-name{font-size:20px; font-weight:900;}
+    .point-area{background:#eee; padding:3px 8px; border-radius:5px; font-size:12px; font-weight:bold; border: 1px solid #000;}
+    .point-coords{display:flex; gap:15px; font-family:monospace; font-size:17px; font-weight:900; color:var(--blue); margin: 10px 0;}
+    
+    .actions { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-action { flex: 1; padding: 8px; border: 2px solid #000; border-radius: 6px; font-weight: 900; font-size: 13px; cursor: pointer; background: #fff; }
+    .btn-copy { background: #f0f9ff; }
+    .btn-map { background: #f0fdf4; }
+
+    .no-results{text-align:center; padding:40px; color:#94a3b8; font-weight:900;}
+  </style>
+</head>
+<body>
+
+<nav>
+    <a href="index.html">🏠 الرئيسية</a>
+    <a href="p1_survey.html">📐 الرفع</a>
+    <a href="p2_stakeout.html">🎯 التوقيع</a>
+    <a href="p3_db_manager.html">🗄️ القاعدة</a>
+</nav>
+
+<header><h1>🔍 محرك البحث المتطور (P4)</h1><p>م. عمار يوسف - AMMAR SURVEY</p></header>
+
+<div class="container">
+    <div class="search-card">
+        <input id="mainSearch" class="input" placeholder="ابحث باسم أو منطقة..." autocomplete="off">
+        
+        <!-- فلاتر المناطق ستظهر هنا برمجياً -->
+        <div id="areaFilters"></div>
+
+        <div style="display:flex; gap:8px;">
+            <input id="searchX" class="input" type="number" step="any" inputmode="decimal" placeholder="X الموقع الحالي" style="font-size:14px;">
+            <input id="searchY" class="input" type="number" step="any" inputmode="decimal" placeholder="Y الموقع الحالي" style="font-size:14px;">
+        </div>
+        <div class="stats">
+            <span>النتائج: <span id="resCount" style="color:var(--main)">0</span></span>
+            <span id="searchMode">الفرز: أبجدي</span>
+        </div>
+    </div>
+
+    <div id="resultsGrid" class="results-grid"></div>
+</div>
+
+<script>
+    let db = [];
+    let activeArea = "الكل";
+
+    function loadDB() {
+        db = JSON.parse(localStorage.getItem("pointsDB") || "[]");
+        renderFilters();
+        smartSearch();
+    }
+
+    // توليد أزرار المناطق الموجودة في البيانات
+    function renderFilters() {
+        const areas = ["الكل", ...new Set(db.map(p => p.area).filter(a => a && a !== "-"))];
+        const container = document.getElementById("areaFilters");
+        container.innerHTML = areas.map(area => 
+            `<div class="filter-btn ${activeArea === area ? 'active' : ''}" onclick="setAreaFilter('${area}')">${area}</div>`
+        ).join("");
+    }
+
+    function setAreaFilter(area) {
+        activeArea = area;
+        renderFilters();
+        smartSearch();
+    }
+
+    function smartSearch() {
+        const q = document.getElementById("mainSearch").value.toLowerCase().trim();
+        const sx = parseFloat(document.getElementById("searchX").value);
+        const sy = parseFloat(document.getElementById("searchY").value);
+        
+        let res = [...db];
+
+        // 1. فلترة المنطقة
+        if (activeArea !== "الكل") {
+            res = res.filter(p => p.area === activeArea);
+        }
+
+        // 2. بحث نصي
+        if (q) {
+            const keywords = q.split(/\s+/);
+            res = res.filter(p => keywords.every(kw => `${p.name} ${p.area} ${p.desc}`.toLowerCase().includes(kw)));
+        }
+
+        // 3. الفرز حسب الموقع أو الأبجدية
+        if (!isNaN(sx) && !isNaN(sy)) {
+            res.forEach(p => p.dist = Math.sqrt(Math.pow(p.x - sx, 2) + Math.pow(p.y - sy, 2)));
+            res.sort((a, b) => a.dist - b.dist);
+            document.getElementById("searchMode").innerText = "الفرز: الأقرب لموقعك";
+        } else {
+            res.sort((a, b) => String(a.name).localeCompare(String(b.name), 'ar', {numeric: true}));
+            document.getElementById("searchMode").innerText = "الفرز: أبجدي";
+        }
+
+        renderResults(res.slice(0, 50));
+    }
+
+    function renderResults(data) {
+        const grid = document.getElementById("resultsGrid");
+        document.getElementById("resCount").innerText = data.length;
+
+        if (data.length === 0) {
+            grid.innerHTML = `<div class="no-results">❌ لا توجد نتائج</div>`;
+            return;
+        }
+
+        grid.innerHTML = data.map(p => `
+            <div class="point-card">
+                <div class="point-header">
+                    <div class="point-name">${p.name}</div>
+                    <div class="point-area">${p.area || '-'}</div>
+                </div>
+                <div class="point-coords">
+                    <span>X: ${parseFloat(p.x).toFixed(3)}</span>
+                    <span>Y: ${parseFloat(p.y).toFixed(3)}</span>
+                </div>
+                ${p.dist !== undefined ? `<div style="color:var(--main); font-size:12px; font-weight:bold; margin-bottom:5px;">📍 يبعد: ${p.dist.toFixed(2)} م</div>` : ''}
+                <div style="font-size:12px; color:#64748b; border-top: 1px solid #eee; padding-top:5px;">${p.desc || ''}</div>
+                
+                <div class="actions">
+                    <button class="btn-action btn-copy" onclick="copyCoord('${p.x},${p.y}')">📋 نسخ</button>
+                    <button class="btn-action btn-map" onclick="openMap(${p.x}, ${p.y})">🗺️ الخريطة</button>
+                </div>
+            </div>`).join("");
+    }
+
+    function copyCoord(text) {
+        navigator.clipboard.writeText(text);
+        alert("📋 تم نسخ الإحداثيات!");
+    }
+
+    function openMap(x, y) {
+        // ملاحظة: إحداثيات المساحة (X,Y) تختلف عن (Lat,Long) 
+        // هنا نفتح بحث جوجل بنفس الأرقام، لكنها للمراجعة فقط
+        window.open(`https://www.google.com/maps/search/?api=1&query=${Math.abs(x)},${y}`, '_blank');
+    }
+
+    document.getElementById("mainSearch").addEventListener("input", smartSearch);
+    document.getElementById("searchX").addEventListener("input", smartSearch);
+    document.getElementById("searchY").addEventListener("input", smartSearch);
+    window.onload = loadDB;
+</script>
+</body>
+</html>
